@@ -1,11 +1,25 @@
-mg<-read.csv(file.choose())
+mg<-read.csv("PhenotypeDataCSV.csv")
 is.data.frame(mg)
+
+
+#Indexing:
 sr<-mg[mg$No. < 2, ]
+
+#Subsetting:
 sr2<-subset(mg, No.<2)
+
+
+#Ordering:
 ordermg<-order(mg$Time_Bud,mg$Fl_Time, na.last = NA)
 mg_ordered<-mg[ordermg,]
+
+
+
+#Summarizing:
 library(tidyverse)
 summarize(mg_ordered, avg_st_hgt=mean(St_Height))
+
+
 
 #Custom function:
 mm_to_cm<-function(x){
@@ -15,21 +29,32 @@ mm_to_cm<-function(x){
 mg_ordered$St_Diam_cm<-mm_to_cm(mg_ordered$St_Diam)
 
 
+
 #Custom operator with if/else statement:
 '%less.than%' <- function(x, y) {
   if (x<y) return (TRUE)
   else return (FALSE)
 }
+'%less.than%'(mg_ordered$Fl_Length,mg_ordered$Fl_Wid)
 
-'%less.than%'(mg_ordered$Fl_Length,mg_ordered$Fl_Wid)#Only returns first value
 
 #For loop:
 for(i in 1:nrow(mg_ordered)){
   print('%less.than%'(mg_ordered$Fl_Length[i],mg_ordered$Fl_Wid[i]))
-}#Returns all values of these columns
+}
+
+
 
 #ddply:
-leaves <- tapply(X = mg_ordered$Leaf_No, INDEX = list(mg_ordered$Pop), FUN = sum)
+library(dplyr)
+Leaf_Number.mg <- mg_ordered %>% 
+  group_by(Pop) %>% 
+  summarise(
+    Observations = n(),  
+    Mean.Number = mean(Leaf_No),
+    SD.Number = sd(Leaf_No),
+  )
+
 
 #Histogram:
 hist(mg_ordered$St_Height, 
@@ -42,18 +67,35 @@ hist(mg_ordered$St_Height,
      breaks=30,
      xlim=c(0,25))
 
+
+
 #Line Plot;
 HOV<-mg_ordered[mg_ordered$Pop=="HOV",]
 plot(x=HOV$Brnc_No, y=HOV$Leaf_No)
+
+
+
 
 #ggplot:
 library(ggplot2)
 ggplot(data= mg_ordered, aes(x=Brnc_No, y=Leaf_No, colour=Pop)) + 
   geom_point() +
-  scale_color_manual(values=c("purple","pink","black","green","yellow","orange","grey","red","brown","turquoise","white","tan"))+
+  scale_color_manual(values=c("purple","pink","black","green","yellow",
+                              "orange","grey","red","brown","turquoise","white","tan"))+
   ggtitle("Relationship between Branch and Leaf Numbers by Population")+
   xlab("Number of Branches")+
   ylab("Number of Leaves")
+
+
+#Exporting Data Sets:
+write.table(mg_ordered, file="mgOrdered.csv", sep=",")
+
+
+
+#Exporting and saving figures from ggplot:
+ggsave("mg_ordered.png")
+
+
   
 
 
